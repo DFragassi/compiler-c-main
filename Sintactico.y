@@ -13,6 +13,8 @@ FILE  *yyin;
 
 %}
 
+//negativeCalculation y sumFirstPrimes
+
 %token CTE
 %token ID
 %token OP_AS
