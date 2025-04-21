@@ -6,18 +6,19 @@
 #include "y.tab.h"
 
 
-//define p validaciones
+/*define p validaciones*/
 #define MAX_STRING 40
 #define MAX_INTEGER 65535
 #define COTA_INFERIOR_FLOAT pow(-1.17549,-38)
 #define COTA_SUPERIOR_FLOAT pow(3.40282,38)
 
-//flex
+
+
+/*flex*/
 FILE  *yyin;
-int yylval;
 char *yyltext;
 
-//validaciones
+/*validaciones*/
 void validacion_string(char[]);
 void validacion_integer(int);
 void validacion_float(float);
@@ -29,7 +30,7 @@ int yyerror(void);
 %option noyywrap  
 %option yylineno 
 
-//palabras reservadas
+/*palabras reservadas*/
 WHILE       "while"
 IF          "if"
 ELSE        "else"
@@ -45,7 +46,7 @@ SUM_FIRST   "sumFirstPrimes"
 DIGITO			[0-9]
 LETRA			[a-zA-Z]
 CTE_STRING		\"[^"\n]*\"
-CTE_FLOAT       {DIGITO}*.{DIGITO}+ | {DIGITO}+.{DIGITO}*
+CTE_FLOAT       {DIGITO}*"."{DIGITO}+|{DIGITO}+"."{DIGITO}* 
 CTE_INT         {DIGITO}+
 ID			    {LETRA}({LETRA}|{DIGITO})*
 OP_AS   		":="
@@ -58,7 +59,7 @@ PC			    ")"
 DP              ":"
 LA              "{"
 LC              "}"
-COMENTARIO      "*-"(.*?)"-*" //no reconoce comentario multilinea
+COMENTARIO      "*-"(.*?)"-*" 
 OP_MAYOR        ">"
 OP_MEN          "<"  
 OP_MAYORI       ">="
@@ -77,27 +78,27 @@ PTO_COMA        ";"
 
 {INIT}          {printf("\nINIT: %s\n", yytext);return INIT;}
 {TYPE_F}        {printf("\nTYPE_F: %s\n", yytext);return TYPE_F;}
-{TYPE_I}        {printf("\nTYPE_I: %s\n", yytext);return TTYPE_I;}
+{TYPE_I}        {printf("\nTYPE_I: %s\n", yytext);return TYPE_I;}
 {TYPE_S}        {printf("\nTYPE_S: %s\n", yytext);return TYPE_S;}
 {WHILE}         {printf("\nCICLO: %s\n", yytext);return WHILE;}
 {WRITE}         {printf("\nWRITE: %s\n", yytext);return WRITE;}
 {READ}          {printf("\nREAD: %s\n", yytext);return READ;}
 {NEG_CALC}      {printf("\n negativeCalculation: %s\n", yytext);return NEG_CALC;}
-{SUM_FIRST}     {printf("\n sumFirstPrimes: %s\n", yytext);return sumFirstPrimes;}
+{SUM_FIRST}     {printf("\n sumFirstPrimes: %s\n", yytext);return SUM_FIRST;}
 {CTE_STRING}	{
-                    yylval.type_str = yytext;
+                    yylval.tipo_str = yytext;
                     validacion_string(yytext); 
                     printf("\nCTE STRING: %s\n", yytext); 
                     return CTE_STRING;
                 }
 {CTE_FLOAT}	    {
-                    yylval.type_float = atof(yytext);
+                    yylval.tipo_float = atof(yytext);
                     validacion_float(atof(yytext));
                     printf("\nCTE FLOAT: %s\n", yytext);
                     return CTE_FLOAT;
                 }    	
 {CTE_INT}	    {
-                    yylval.type_int = atoi(yytext);
+                    yylval.tipo_int = atoi(yytext);
                     validacion_integer(atoi(yytext));
                     printf("\nCTE INT: %s\n", yytext);
                     return CTE_INT;
@@ -160,12 +161,11 @@ void validacion_string(char cadena[])
 
 void validacion_float(float numero)
 {   
-    if (numero > COTA_SUPERIOR_FLOAT || numero < COTA_INFERIOR_FLOAT)
+    if (isnan(numero) || isinf(numero) || numero > COTA_SUPERIOR_FLOAT || numero < COTA_INFERIOR_FLOAT)
     {
         printf("ERROR: Rango de float excedido. Se permite float de 32 bits.\n");
         yyerror();
     } 
-
 }
 
 void validacion_integer(int numero)
