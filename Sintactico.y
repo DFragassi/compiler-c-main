@@ -262,6 +262,22 @@ factor:
         constante_aux_int=$1;
         insertar_tabla_simbolos(nombre_id, "CTE_INT", "", $1, 0.0);
       }
+      | OP_RES CTE_INT
+      {
+        constante_aux_int=$2;
+        int cteneg = constante_aux_int * (-1);
+         printf("ES CONSTANTE int NEG %d\n", cteneg);
+        
+        insertar_tabla_simbolos(nombre_id, "CTE_INT", "", cteneg, 0.0);
+      }
+      | OP_RES CTE_FLOAT
+      {
+        constante_aux_float=$2;
+        float cteneg = constante_aux_float * (-1);
+        printf("ES CONSTANTE float NEG %f\n", cteneg);
+      
+        insertar_tabla_simbolos(nombre_id, "CTE_FLOAT", "", 0, cteneg);
+      }
       | CTE_FLOAT 
       {
         printf("ES CONSTANTE FLOAT\n");
