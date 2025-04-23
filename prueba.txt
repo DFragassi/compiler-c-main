@@ -1,18 +1,18 @@
-
+a : float
 a := -8
 
-*- Prueba expreifon -*
+*- Prueba expresión -*
 
 c:=d*(e-21)/4
 
-*- c:=d*(e-21)/4; -* *-Ejemplo error ifntactico con un char que no se espera (;)-*
+*- c:=d*(e-21)/4; -* *-Ejemplo error sintactico con un char que no se espera (;)-*
 
 a := negativeCalculation(8, -8, a, b, 8.9)
 
 a := sumFirstPrimes(8)
 
 
-*- Aifgnaciones -*
+*- Asignaciones -*
 
 x4 := 27 - c
 xy := r + 500
