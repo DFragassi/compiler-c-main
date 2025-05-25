@@ -254,18 +254,20 @@ factor:
       {
         printf("ES CONSTANTE STRING\n");
         strcpy(constante_aux_string,$1);
-        insertar_tabla_simbolos(nombre_id, "CTE_STR", $1, 0, 0.0);
+        insertar_tabla_simbolos($1, "CTE_STR", $1, 0, 0.0);
       }
       | CTE_INT 
       {
         printf("ES CONSTANTE INT\n");
         constante_aux_int=$1;
+        itoa(constante_aux_int, nombre_id, 10);
         insertar_tabla_simbolos(nombre_id, "CTE_INT", "", $1, 0.0);
       }
       | OP_RES CTE_INT
       {
         constante_aux_int=$2;
         int cteneg = constante_aux_int * (-1);
+        itoa(cteneg, nombre_id, 10);
          printf("ES CONSTANTE int NEG %d\n", cteneg);
         
         insertar_tabla_simbolos(nombre_id, "CTE_INT", "", cteneg, 0.0);
@@ -274,6 +276,7 @@ factor:
       {
         constante_aux_float=$2;
         float cteneg = constante_aux_float * (-1);
+        sprintf(nombre_id, "%f", cteneg);  
         printf("ES CONSTANTE float NEG %f\n", cteneg);
       
         insertar_tabla_simbolos(nombre_id, "CTE_FLOAT", "", 0, cteneg);
@@ -282,6 +285,7 @@ factor:
       {
         printf("ES CONSTANTE FLOAT\n");
         constante_aux_float=$1;
+        sprintf(nombre_id, "%f", $1); 
         insertar_tabla_simbolos(nombre_id, "CTE_FLOAT", "", 0, $1);
       }
 	    | PA expresion PC {printf("Expresion entre parentesis es Factor\n");}

@@ -1,21 +1,23 @@
 NOMBRE                        TIPODATO                      VALOR                                   LONGITUD                      
-_a                                                          1                                       
-_c                                                          4                                       
-_x4                                                         27                                      
-_xy                                                         500                                     
-_xx                                                         3                                       
-_a3                                                         99999.992188                            
-_a4                                                         99.000000                               
-_a5                                                         0.999900                                
-_b78                                                        asldk  fh sjf                           13
-_b76                                                        @sdaaaaaa%%%aaaaaafg                    20
-a1                            FLOAT                         --                                      
-b1                            FLOAT                         --                                      
-variable1                     INTEGER                       --                                      
-p1                            STRING                        --                                      
-p2                            STRING                        --                                      
-p3                            STRING                        --                                      
-variable2                     INTEGER                       --                                      
-a2                            FLOAT                         --                                      
-b3                            FLOAT                         --                                      
-_b                                                          3                                       
+_-8                           CTE_INT                       -8                                      --                            
+_21                           CTE_INT                       21                                      --                            
+_4                            CTE_INT                       4                                       --                            
+_27                           CTE_INT                       27                                      --                            
+_500                          CTE_INT                       500                                     --                            
+_34                           CTE_INT                       34                                      --                            
+_3                            CTE_INT                       3                                       --                            
+_99999.992188                 CTE_FLOAT                     99999.992188                            --                            
+_99.000000                    CTE_FLOAT                     99.000000                               --                            
+_0.999900                     CTE_FLOAT                     0.999900                                --                            
+_"asldk  fh sjf"              CTE_STR                       asldk  fh sjf                           13                            
+_"@sdaaaaaa%%%aaaaaafg"       CTE_STR                       @sdaaaaaa%%%aaaaaafg                    20                            
+a1                            FLOAT                         --                                      --                            
+b1                            FLOAT                         --                                      --                            
+variable1                     INTEGER                       --                                      --                            
+p1                            STRING                        --                                      --                            
+p2                            STRING                        --                                      --                            
+p3                            STRING                        --                                      --                            
+variable2                     INTEGER                       --                                      --                            
+a2                            FLOAT                         --                                      --                            
+b3                            FLOAT                         --                                      --                            
+_1                            CTE_INT                       1                                       --                            
