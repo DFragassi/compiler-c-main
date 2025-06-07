@@ -14,12 +14,6 @@ FILE  *yyin;
   int yyerror();
   int yylex();
 
-// Declaracion funciones codigo intermedio
-/*
-void inicializar_codigo_intermedio();
-void guardar_codigo_intermedio();
-void insertar_en_polaca(const char *elemento);*/
-
 
 // Variables globales
 t_tabla tabla_simbolos;
