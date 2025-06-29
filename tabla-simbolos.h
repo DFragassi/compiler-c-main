@@ -49,6 +49,13 @@ int buscar_simbolo(t_tabla *tabla_simbolos, const char *nombre)
   return OK;
 }*/
 
+void replace_all_char(char* cadena, char buscar, char reemplazo) {
+    for (int i = 0; cadena[i] != '\0'; i++) {
+        if (cadena[i] == buscar) {
+            cadena[i] = reemplazo;
+        }
+    }
+}
 
 t_data *crearDatos(const char *nombre, const char *tipo,
                    const char *valString, int valor_var_int,
@@ -123,6 +130,8 @@ t_data *crearDatos(const char *nombre, const char *tipo,
   free(data);
   return NULL;
 }
+
+
 
 int insertar_tabla_simbolos(t_tabla *tabla_simbolos, const char *nombre, const char *tipo,
                             const char *valor_string, int valor_var_int,

@@ -59,14 +59,14 @@ int comparar_op(char * celda){
 
   return OP_OPE;
 }
-
+/*
 void replace_all_char(char* cadena, char buscar, char reemplazo) {
     for (int i = 0; cadena[i] != '\0'; i++) {
         if (cadena[i] == buscar) {
             cadena[i] = reemplazo;
         }
     }
-}
+}*/
 
 void generar_assembler( t_cola *polaca,t_tabla *tabla_sim){
     FILE* file_assembler;

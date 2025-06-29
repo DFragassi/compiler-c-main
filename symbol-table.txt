@@ -12,7 +12,6 @@ d                             STRING                        --                  
 variable2                     INTEGER                       --                                      --                            
 a2                            FLOAT                         --                                      --                            
 b3                            FLOAT                         --                                      --                            
-_"aaaaa"                      CTE_STR                       aaaaa                                   5                             
 _3                            CTE_INT                       3                                       --                            
 _1                            CTE_INT                       1                                       --                            
 _7                            CTE_INT                       7                                       --                            

@@ -18,7 +18,6 @@ d                    db		 ?                             , '$', 14 dup (?)
 variable2            dd		 ?                             
 a2                   dd		 ?                             
 b3                   dd		 ?                             
-_"aaaaa"             db		 "aaaaa"                       , '$', 14 dup (?)
 _3                   dd		 3                             
 _1                   dd		 1                             
 _7                   dd		 7                             
@@ -42,9 +41,6 @@ MOV EAX,@DATA
 MOV DS,EAX
 MOV ES,EAX;
 
-
-FLD _"aaaaa"
-FSTP p1
 
 FLD _1
 FLD _7
@@ -80,7 +76,7 @@ FXCH
 FCOM
 FSTSW AX
 SAHF
-JA etiq_true26 
+JA etiq_true23 
 
 FLD c
 FLD _0
@@ -88,9 +84,9 @@ FXCH
 FCOM
 FSTSW AX
 SAHF
-JE etiq_else42 
+JE etiq_else39 
 
-etiq_true26:
+etiq_true23:
 FLD _8
 FLD _2
 FADD
@@ -118,13 +114,13 @@ FSTP @aux10
 
 FLD @aux10
 FSTP c
-JMP etiq_endif46 
+JMP etiq_endif43 
 
-etiq_else42:
+etiq_else39:
 FLD _0
 FSTP c
 
-etiq_endif46:
+etiq_endif43:
 FFREE
 mov ax,4c00h
 int 21h
