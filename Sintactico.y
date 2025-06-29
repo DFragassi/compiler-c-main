@@ -8,17 +8,20 @@
 #include "polaca-inversa.h"
 #include "pila.h"
 #include "cola.h"
+#include "assembler.h"
 int yystopparser=0;
 FILE  *yyin;
+extern int yylineno;
 
-  int yyerror();
+  int yyerror(const char *msg);
   int yylex();
 
+void inicializar_codigo_intermedio();
 
 // Variables globales
 t_tabla tabla_simbolos;
 t_cola c_polaca;
-t_pila aux_saltos;
+Pila *pila_saltos, *pila_id, *pila_comparadores, *pila_while, *pila_tipos;
 
 // Variables existentes
 int i=0;
@@ -30,6 +33,13 @@ float constante_aux_float;
 char constante_aux_string[40];
 char aux_string[40];
 t_nombresId t_ids[10];
+char comparador[4];
+int f_op_not = 0;
+int cant_aux = 1;
+int nro_celda;
+char dato_celda[MAX_CADENA];
+int celda_or;
+char comparador_or[4];
 
 
 %}
@@ -81,12 +91,17 @@ char *tipo_str;
 %token PTO_COMA
 %token IGUAL
 
+%nonassoc LOWER_THAN_ELSE
+%nonassoc ELSE
+
 %%
 
 programa: instrucciones{
   guardar_tabla_simbolos(&tabla_simbolos);
   guardar_codigo_intermedio(&c_polaca);
+  //generar_aux();
   printf("COMPILACION COMPLETADA - Codigo intermedio generado\n");
+  generar_assembler(&c_polaca,&tabla_simbolos);
 }
 ;
 
@@ -100,12 +115,42 @@ sentencia : asignacion { printf("SENTENCIA ES ASIGNACION\n"); }
 | leer { printf("SENTENCIA ES LEER\n"); }
 | escribir { printf("SENTENCIA ES ESCRIBIR\n"); };
 
-si : IF PA condicion PC LA instrucciones LC { 
-    printf("ES CONDICION SI\n");
-}
-| IF PA condicion PC LA instrucciones LC ELSE LA instrucciones LC { 
-    printf("ES CONDICION SINO\n");
-};
+si : 
+    IF PA condicion PC LA instrucciones LC { 
+        printf("ES CONDICION SI\n");
+        
+        nro_celda = atoi(desapilar(pila_saltos)); 
+        sprintf(dato_celda, "etiq_endif%d:", c_polaca.final ->nro+1);
+        actualizar_celda(&c_polaca, nro_celda,dato_celda);
+        if (!es_pila_vacia(pila_saltos)){
+          nro_celda = atoi(desapilar(pila_saltos)); 
+          actualizar_celda(&c_polaca, nro_celda,dato_celda);
+        }
+        insertar_en_polaca(&c_polaca, dato_celda);
+      }
+    | IF PA condicion PC LA instrucciones LC ELSE {
+          insertar_en_polaca(&c_polaca, "BI");
+          avanzar_celda(&c_polaca);
+
+          nro_celda = atoi(desapilar(pila_saltos)); 
+          sprintf(dato_celda, "etiq_else%d:", c_polaca.final ->nro+1);
+          actualizar_celda(&c_polaca, nro_celda,dato_celda);
+          if (!es_pila_vacia(pila_saltos)){
+            nro_celda = atoi(desapilar(pila_saltos)); 
+            actualizar_celda(&c_polaca, nro_celda,dato_celda);
+          }
+
+          apilar_celda(&c_polaca, pila_saltos);
+          insertar_en_polaca(&c_polaca, dato_celda);
+        } 
+        LA instrucciones LC { 
+          printf("ES CONDICION SINO\n");
+
+          nro_celda = atoi(desapilar(pila_saltos)); 
+          sprintf(dato_celda, "etiq_endif%d:", c_polaca.final ->nro+1);
+          actualizar_celda(&c_polaca, nro_celda,dato_celda);
+          insertar_en_polaca(&c_polaca, dato_celda);
+        };
 
 bloque_asig : INIT LA lista_asignacion LC { printf("BLOQUE ASIGNACION\n"); };
 
@@ -113,6 +158,11 @@ lista_asignacion : lista_variables asig_tipo
 {
   for (i = 0; i < cant_id; i++)
   {
+    if (buscar_simbolo(&tabla_simbolos, t_ids[i].cadena) == EXISTE_SIMBOLO){
+      char mensaje[200];
+      sprintf(mensaje, " El ID %s ya fue declarado ", t_ids[i].cadena); 
+      yyerror(mensaje);
+    }
     insertar_tabla_simbolos(&tabla_simbolos, t_ids[i].cadena, tipo_dato, "", 0, 0);
   }
   cant_id = 0;
@@ -121,6 +171,11 @@ lista_asignacion : lista_variables asig_tipo
 {
   for (i = 0; i < cant_id; i++)
   {
+    if (buscar_simbolo(&tabla_simbolos, t_ids[i].cadena) == EXISTE_SIMBOLO){
+      char mensaje[200];
+      sprintf(mensaje, " El ID %s ya fue declarado ", t_ids[i].cadena); 
+      yyerror(mensaje);
+    }
     insertar_tabla_simbolos(&tabla_simbolos, t_ids[i].cadena, tipo_dato, "", 0, 0);
   }
   cant_id = 0;
@@ -156,10 +211,29 @@ asig_tipo:
 ;
 
 asignacion: 
-    id  OP_AS expresion 
+    id {
+      apilar(pila_id, nombre_id);
+
+      if (buscar_simbolo(&tabla_simbolos, nombre_id) == NO_EXISTE_SIMBOLO){
+          char mensaje[200];
+          sprintf(mensaje, " El ID %s no fue declarado ", nombre_id); 
+          yyerror(mensaje);
+        }
+    } 
+      OP_AS expresion 
     {
-        printf("    ID = Expresion es ASIGNACION %s\n",nombre_id);
-        insertar_en_polaca(&c_polaca, "=");
+        printf("    ID = Expresison es ASIGNACION %s\n",nombre_id);
+        char *nombre = desapilar(pila_id);
+
+        char *tipo_id = buscar_tipo_simbolo(&tabla_simbolos,nombre);
+        apilar(pila_tipos,tipo_id);
+        insertar_en_polaca(&c_polaca, nombre);
+        insertar_en_polaca(&c_polaca, ":=");
+        
+        if (valida_tipos_datos(pila_tipos) == OP_NO_COMPATIBLES) {
+          vaciar_pila(pila_tipos);
+          yyerror(" Error en asignacion de datos de distinto tipo ");
+        }
     }
 ;
 
@@ -167,7 +241,6 @@ id:
   ID
   {
     strcpy(nombre_id,$1);
-    insertar_en_polaca(&c_polaca, nombre_id);
   }
 ;
 
@@ -177,50 +250,159 @@ expresion:
    }
    | expresion OP_SUM termino {
         printf("Expresion+Termino es Expresion\n");
+        insertar_en_polaca(&c_polaca, "+");
+        insertar_aux_TS(&tabla_simbolos, &cant_aux);
+        
+        if (valida_tipos_datos(pila_tipos) == OP_NO_COMPATIBLES) {
+          vaciar_pila(pila_tipos);
+          yyerror(" Tipo de operandos incompatibles para el operador + ");
+        }
    }
    | expresion OP_RES termino {
         printf("Expresion-Termino es Expresion\n");
+        insertar_en_polaca(&c_polaca, "-");
+        insertar_aux_TS(&tabla_simbolos, &cant_aux);
+        
+        if (valida_tipos_datos(pila_tipos) == OP_NO_COMPATIBLES) {
+          vaciar_pila(pila_tipos);
+          yyerror(" Tipo de operandos incompatibles para el operador - ");
+        }
    }
    | negativeCalc
    | sumFirst
 ;
    
 mientras:
-  WHILE PA condicion PC LA instrucciones LC 
+  WHILE PA {
+    sprintf(dato_celda, "etiq_while%d:", c_polaca.final ->nro+1);
+    insertar_en_polaca(&c_polaca, dato_celda);
+    apilar_celda(&c_polaca, pila_while);
+  } 
+  condicion PC LA instrucciones LC 
   {
     printf("ES UN MIENTRAS\n");
+    insertar_en_polaca(&c_polaca, "BI");
+    sprintf(dato_celda, "etiq_while%s:", desapilar(pila_while));
+    insertar_en_polaca(&c_polaca, dato_celda);
+
+    nro_celda = atoi(desapilar(pila_saltos)); 
+    sprintf(dato_celda, "etiq_wend%d:", c_polaca.final ->nro+1);
+    actualizar_celda(&c_polaca, nro_celda,dato_celda);
+    if (!es_pila_vacia(pila_saltos)){
+      nro_celda = atoi(desapilar(pila_saltos)); 
+      actualizar_celda(&c_polaca, nro_celda,dato_celda);
+    }
+
+    insertar_en_polaca(&c_polaca, dato_celda);
   }
 ;
 
 condicion:
-  OP_NOT comparacion 
-  | condicion OP_OR comparacion 
-  | condicion OP_AND comparacion
+  OP_NOT {f_op_not = 1;} comparacion
+  | condicion OP_OR {
+      celda_or = atoi(desapilar(pila_saltos)); 
+      strcpy(comparador_or,comparador);
+  } comparacion {
+      sprintf(dato_celda, "etiq_true%d:", c_polaca.final ->nro+1);
+      actualizar_celda(&c_polaca, celda_or,dato_celda);
+      insertar_en_polaca(&c_polaca, dato_celda);
+
+      complemento_op(comparador_or,comparador);
+      actualizar_celda(&c_polaca, celda_or-1,comparador);
+    }
+  | condicion OP_AND comparacion 
   | comparacion
 ;
 
 comparacion: 
     expresion operador_comparacion expresion {
+      //Verificar tipos de expresion
+      insertar_en_polaca(&c_polaca, "CMP");
+      insertar_en_polaca(&c_polaca, comparador);
+      avanzar_celda(&c_polaca);
+      apilar_celda(&c_polaca, pila_saltos);
+
+      if (valida_tipos_datos(pila_tipos) == OP_NO_COMPATIBLES) {
+        vaciar_pila(pila_tipos);
+        yyerror(" Tipo de expresiones incompatibles para una comparacion ");
+      }
+
     }
     | PA condicion PC
 ;
 
 operador_comparacion:
-  OP_MAYOR 
-  | OP_MAYORI 
-  | OP_MEN 
-  | OP_MENI 
-  | OP_IGUAL 
-  | OP_NOT_IGUAL
+   OP_MAYOR    {
+    if (f_op_not == 1) {
+      strcpy(comparador, "BGT");
+      f_op_not = 0;
+    } else {
+      strcpy(comparador, "BLE");
+    }
+  }
+  | OP_MAYORI {
+    if (f_op_not == 1) {
+      strcpy(comparador, "BGE");
+      f_op_not = 0;
+    } else {
+      strcpy(comparador, "BLT");
+    }
+  }
+  | OP_MEN    {
+    if (f_op_not == 1) {
+      strcpy(comparador, "BLT");
+      f_op_not = 0;
+    } else {
+      strcpy(comparador, "BGE");
+    }
+  }
+  | OP_MENI   {
+    if (f_op_not == 1) {
+      strcpy(comparador, "BLE");
+      f_op_not = 0;
+    } else {
+      strcpy(comparador,"BGT");
+    }
+  }
+  | OP_IGUAL  {
+    if (f_op_not == 1) {
+      strcpy(comparador, "BEQ");
+      f_op_not = 0;
+    } else {
+      strcpy(comparador, "BNE");
+    }
+  }
+  | OP_NOT_IGUAL {
+    if (f_op_not == 1) {
+      strcpy(comparador, "BNE");
+      f_op_not = 0;
+    } else {
+      strcpy(comparador, "BEQ");
+    }
+  }
 ;
 
 termino: 
        factor {printf("Factor es Termino\n");}
        |termino OP_MUL factor {
            printf("Termino*Factor es Termino\n");
+           insertar_en_polaca(&c_polaca, "*");
+           insertar_aux_TS(&tabla_simbolos, &cant_aux);
+           
+           if (valida_tipos_datos(pila_tipos) == OP_NO_COMPATIBLES) {
+              vaciar_pila(pila_tipos);
+              yyerror(" Tipo de operandos incompatibles para el operador * ");
+            }
        }
        |termino OP_DIV factor {
            printf("Termino/Factor es Termino\n");
+           insertar_en_polaca(&c_polaca, "/");
+           insertar_aux_TS(&tabla_simbolos, &cant_aux);
+
+           if (valida_tipos_datos(pila_tipos) == OP_NO_COMPATIBLES) {
+              vaciar_pila(pila_tipos);
+              yyerror(" Tipo de operandos incompatibles para el operador / ");
+            }
        }
 ;
 
@@ -229,6 +411,15 @@ factor:
       {
         printf("ID es Factor \n");
         insertar_en_polaca(&c_polaca, $1);
+
+        if (buscar_simbolo(&tabla_simbolos, $1) == NO_EXISTE_SIMBOLO){
+          char mensaje[200];
+          sprintf(mensaje, " El ID %s no fue declarado ", $1); 
+          yyerror(mensaje);
+        }
+
+        char *tipo_id = buscar_tipo_simbolo(&tabla_simbolos,$1);
+        apilar(pila_tipos,tipo_id);
       }
       | CTE_STRING 
       {
@@ -238,6 +429,7 @@ factor:
         char nombreCte[100] = "_";
         strcat(nombreCte, $1);
         insertar_en_polaca(&c_polaca, nombreCte);
+        apilar(pila_tipos,"STRING");
       }
       | CTE_INT 
       {
@@ -248,6 +440,7 @@ factor:
         char nombreCte[100] = "_";
         strcat(nombreCte, nombre_id);
         insertar_en_polaca(&c_polaca, nombreCte);
+        apilar(pila_tipos,"FLOAT");
       }
       | OP_RES CTE_INT
       {
@@ -259,6 +452,7 @@ factor:
         char nombreCte[100] = "_";
         strcat(nombreCte, nombre_id);
         insertar_en_polaca(&c_polaca, nombreCte);
+        apilar(pila_tipos,"FLOAT");
 
       }
       | OP_RES CTE_FLOAT
@@ -271,6 +465,7 @@ factor:
         char nombreCte[100] = "_";
         strcat(nombreCte, nombre_id);
         insertar_en_polaca(&c_polaca, nombreCte);
+        apilar(pila_tipos,"FLOAT");
       }
       | CTE_FLOAT 
       {
@@ -281,6 +476,7 @@ factor:
         char nombreCte[100] = "_";
         strcat(nombreCte, nombre_id);
         insertar_en_polaca(&c_polaca, nombreCte);
+        apilar(pila_tipos,"FLOAT");
       }
       | PA expresion PC {printf("Expresion entre parentesis es Factor\n");}
 ;
@@ -334,15 +530,25 @@ int main(int argc, char *argv[])
     else
     { 
         crear_tabla_simbolos(&tabla_simbolos);
-        inicializar_codigo_intermedio(&c_polaca);
+        inicializar_codigo_intermedio();
         yyparse();
     }
   fclose(yyin);
   return 0;
 }
 
-int yyerror(void)
+int yyerror(const char *msg)
 {
-  printf("\n ********* Error Sintactico ********* \n");
+  printf("********* Error en linea %d: %s *********\n", yylineno, msg);
   exit (1);
+}
+
+
+void inicializar_codigo_intermedio(){
+  inicializar_polaca(&c_polaca);
+  pila_id = crear_pila();
+  pila_comparadores = crear_pila();
+  pila_saltos = crear_pila();
+  pila_while = crear_pila();
+  pila_tipos = crear_pila();
 }

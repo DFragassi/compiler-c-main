@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#define SUCCESS 1
+#define ERROR -1
 
 typedef struct nodo_cola {
     int nro;
@@ -23,21 +25,17 @@ void inicializarCola(t_cola* cola) {
     cola->cant_celdas = 0;
 }
 
-void encolar(t_cola* cola, const char* texto) {
+int encolar(t_cola* cola, const char* texto) {
     t_nodo_cola* nuevo = (t_nodo_cola*)malloc(sizeof(t_nodo_cola));
     if (!nuevo) {
-        /*perror("Error al asignar nodo");
-        exit(EXIT_FAILURE);*/
-        return ;
+        return ERROR;
     }
 
     nuevo->nro = cola->cant_celdas;
     nuevo->dato = strdup(texto);
     if (!nuevo->dato) {
-        //perror("Error al copiar string");
         free(nuevo);
-        //exit(EXIT_FAILURE);
-        return ;
+        return ERROR;
     }
 
     nuevo->siguiente = NULL;
@@ -51,6 +49,8 @@ void encolar(t_cola* cola, const char* texto) {
     }
     
     cola->cant_celdas++;
+
+    return nuevo->nro;
 }
 
 char* desencolar(t_cola* cola) {
@@ -72,6 +72,10 @@ char* desencolar(t_cola* cola) {
 
 int estaVacia(const t_cola* cola) {
     return cola->frente == NULL;
+}
+
+void actualizar_final(t_cola* cola){
+    cola->final->nro = 999;
 }
 
 #endif

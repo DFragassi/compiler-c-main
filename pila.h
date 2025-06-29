@@ -3,66 +3,73 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
 
-typedef struct nodo_pila {
-    int nro_celda;
-    struct nodo_pila *siguiente;
-} t_nodo_pila;
+#define MAX_CADENA 100
+
+typedef struct Nodo {
+    char dato[MAX_CADENA];
+    struct Nodo* siguiente;
+} Nodo;
 
 typedef struct {
-    t_nodo_pila *tope;
-} t_pila;
+    Nodo* tope;
+} Pila;
 
-
-void inicializar_pila(t_pila *pila) {
-    pila->tope = NULL;
+// Crear pila
+Pila* crear_pila() {
+    Pila* pila = malloc(sizeof(Pila));
+    if (pila) pila->tope = NULL;
+    return pila;
 }
 
-int pila_vacia(t_pila *pila) {
+// Verifica si está vacía
+int es_pila_vacia(Pila* pila) {
     return pila->tope == NULL;
 }
 
-void apilar(t_pila *pila, int elemento) {
-  t_nodo_pila *nuevo = (t_nodo_pila*)malloc(sizeof(t_nodo_pila));
+// Apilar cadena
+int apilar(Pila* pila, const char* cadena) {
+    Nodo* nuevo = malloc(sizeof(Nodo));
+    if (!nuevo) return 0;
 
-  /*nuevo->dato = (char *)malloc(sizeof(char) * (strlen(elemento) + 1));
-  if (nuevo->dato == NULL)
-  {
-    free(nuevo);
-    return ;
-  }
-  strcpy(nuevo->dato, elemento);*/
-  nuevo->nro_celda = elemento;
-  nuevo->siguiente = pila->tope;
-  pila->tope = nuevo;
+    strncpy(nuevo->dato, cadena, MAX_CADENA - 1);
+    nuevo->dato[MAX_CADENA - 1] = '\0';  // Asegura el null terminator
+
+    nuevo->siguiente = pila->tope;
+    pila->tope = nuevo;
+    return 1;
 }
 
-int desapilar(t_pila *pila) {
-    if (pila_vacia(pila)) return -1;
-    
-    t_nodo_pila *temp = pila->tope;
+// Desapilar y devolver cadena (debe liberarse después)
+char* desapilar(Pila* pila) {
+    if (es_pila_vacia(pila)) return NULL;
 
-    /*char *resultado;
-    resultado = (char *)malloc(sizeof(char) * (strlen(temp->dato) + 1));
-    if (resultado == NULL)
-    {
-      return NULL;
-    }
-    strcpy(resultado, temp->dato);*/
-    int resultado;
-    resultado = temp->nro_celda;
-    pila->tope = temp->siguiente;
-    free(temp);
-    return resultado;
+    Nodo* nodo = pila->tope;
+    pila->tope = nodo->siguiente;
+
+    char* resultado = malloc(strlen(nodo->dato) + 1);
+    if (resultado) strcpy(resultado, nodo->dato);
+
+    free(nodo);
+    return resultado;  // ¡No olvidar liberar luego!
 }
 
-
-
-void liberar_pila(t_pila *pila) {
-    while (!pila_vacia(pila)) {
-        desapilar(pila);
+// Liberar toda la pila
+void vaciar_pila(Pila* pila) {
+    while (!es_pila_vacia(pila)) {
+        free(desapilar(pila));
     }
+    free(pila);
+}
+
+void ver_pila(Pila* pila) {
+    printf("*************************** Viendo pila ");
+    Nodo* nodo = pila->tope;
+    while (nodo) {
+        printf("%s - ",nodo->dato);
+        nodo = nodo->siguiente;
+    }
+    printf("***************************\n");
 }
 
 #endif

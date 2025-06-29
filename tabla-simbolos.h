@@ -4,6 +4,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#define EXISTE_SIMBOLO 1
+#define NO_EXISTE_SIMBOLO 0
+
 
 union t_valor{
                 int valor_var_int;
@@ -35,12 +38,91 @@ typedef struct{
 }t_nombresId;
 
 
-void crear_tabla_simbolos(t_tabla *tabla_simbolos);
-int insertar_tabla_simbolos(t_tabla *tabla_simbolos,const char*, const char*, const char*, int, float);
-t_data* crearDatos(const char*, const char*, const char*, int, float);
-void guardar_tabla_simbolos(t_tabla *tabla_simbolos);
+/*
+int buscar_simbolo(t_tabla *tabla_simbolos, const char *nombre) 
+{
+  t_simbolo *tabla = tabla_simbolos->primero  
+  while(tabla && strcmp(tabla->data.nombre, nombre) < 0)
+      tabla = tabla->next;
+  if(tabla && strcmp(tabla->data.nombre, nombre) == 0)
+      return DUPLICADO;
+  return OK;
+}*/
 
 
+t_data *crearDatos(const char *nombre, const char *tipo,
+                   const char *valString, int valor_var_int,
+                   float valor_var_float)
+{
+  t_data *data = (t_data *)calloc(1, sizeof(t_data));
+  if (data == NULL)
+  {
+    return NULL;
+  }
+
+  data->tipo = (char *)malloc(sizeof(char) * (strlen(tipo) + 1));
+  if (data->tipo == NULL)
+  {
+    free(data);
+    return NULL;
+  }
+  strcpy(data->tipo, tipo);
+
+  if (strcmp(tipo, "STRING") == 0 || strcmp(tipo, "INTEGER") == 0 || strcmp(tipo, "FLOAT") == 0)
+  {
+    data->nombre = (char *)malloc(sizeof(char) * (strlen(nombre) + 1));
+    if (data->nombre == NULL)
+    {
+      free(data->tipo);
+      free(data);
+      return NULL;
+    }
+    strcpy(data->nombre, nombre);
+    return data;
+  }
+  else
+  {
+    char nombreCte[100] = "_";
+    strcat(nombreCte, nombre);
+
+    data->nombre = (char *)malloc(sizeof(char) * (strlen(nombreCte) + 1));
+    if (data->nombre == NULL)
+    {
+      free(data->tipo);
+      free(data);
+      return NULL;
+    }
+    strcpy(data->nombre, nombreCte);
+
+    if (strcmp(tipo, "CTE_STR") == 0)
+    {
+      data->valor.valor_var_str = (char *)malloc(sizeof(char) * (strlen(valString) + 1));
+      if (data->valor.valor_var_str == NULL)
+      {
+        free(data->nombre);
+        free(data->tipo);
+        free(data);
+        return NULL;
+      }
+      strcpy(data->valor.valor_var_str, valString);
+      data->longitud = strlen(valString) - 2;
+    }
+    else if (strcmp(tipo, "CTE_FLOAT") == 0)
+    {
+      data->valor.valor_var_float = valor_var_float;
+    }
+    else if (strcmp(tipo, "CTE_INT") == 0)
+    {
+      data->valor.valor_var_int = valor_var_int;
+    }
+
+    return data;
+  }
+
+  free(data->tipo);
+  free(data);
+  return NULL;
+}
 
 int insertar_tabla_simbolos(t_tabla *tabla_simbolos, const char *nombre, const char *tipo,
                             const char *valor_string, int valor_var_int,
@@ -119,79 +201,6 @@ int insertar_tabla_simbolos(t_tabla *tabla_simbolos, const char *nombre, const c
   return 0;
 }
 
-t_data *crearDatos(const char *nombre, const char *tipo,
-                   const char *valString, int valor_var_int,
-                   float valor_var_float)
-{
-  t_data *data = (t_data *)calloc(1, sizeof(t_data));
-  if (data == NULL)
-  {
-    return NULL;
-  }
-
-  data->tipo = (char *)malloc(sizeof(char) * (strlen(tipo) + 1));
-  if (data->tipo == NULL)
-  {
-    free(data);
-    return NULL;
-  }
-  strcpy(data->tipo, tipo);
-
-  if (strcmp(tipo, "STRING") == 0 || strcmp(tipo, "INTEGER") == 0 || strcmp(tipo, "FLOAT") == 0)
-  {
-    data->nombre = (char *)malloc(sizeof(char) * (strlen(nombre) + 1));
-    if (data->nombre == NULL)
-    {
-      free(data->tipo);
-      free(data);
-      return NULL;
-    }
-    strcpy(data->nombre, nombre);
-    return data;
-  }
-  else
-  {
-    char nombreCte[100] = "_";
-    strcat(nombreCte, nombre);
-
-    data->nombre = (char *)malloc(sizeof(char) * (strlen(nombreCte) + 1));
-    if (data->nombre == NULL)
-    {
-      free(data->tipo);
-      free(data);
-      return NULL;
-    }
-    strcpy(data->nombre, nombreCte);
-
-    if (strcmp(tipo, "CTE_STR") == 0)
-    {
-      data->valor.valor_var_str = (char *)malloc(sizeof(char) * (strlen(valString) + 1));
-      if (data->valor.valor_var_str == NULL)
-      {
-        free(data->nombre);
-        free(data->tipo);
-        free(data);
-        return NULL;
-      }
-      strcpy(data->valor.valor_var_str, valString);
-      data->longitud = strlen(valString) - 2;
-    }
-    else if (strcmp(tipo, "CTE_FLOAT") == 0)
-    {
-      data->valor.valor_var_float = valor_var_float;
-    }
-    else if (strcmp(tipo, "CTE_INT") == 0)
-    {
-      data->valor.valor_var_int = valor_var_int;
-    }
-
-    return data;
-  }
-
-  free(data->tipo);
-  free(data);
-  return NULL;
-}
 
 void guardar_tabla_simbolos(t_tabla *tabla_simbolos)
 {
@@ -285,6 +294,42 @@ void guardar_tabla_simbolos(t_tabla *tabla_simbolos)
 void crear_tabla_simbolos(t_tabla *tabla_simbolos)
 {
     tabla_simbolos->primero = NULL;
+}
+
+int buscar_simbolo(t_tabla *tabla_simbolos, const char *nombre) {
+    t_simbolo *actual = tabla_simbolos->primero;
+
+    while (actual != NULL) {
+        if (actual->data.nombre != NULL && strcmp(actual->data.nombre, nombre) == 0) {
+            return EXISTE_SIMBOLO; 
+        }
+        actual = actual->next;
+    }
+
+    return NO_EXISTE_SIMBOLO; 
+}
+
+void insertar_aux_TS(t_tabla *tabla_simbolos, int *cant_aux){
+
+  char nombre_aux[100] = "@aux";
+  char buffer[100];
+  sprintf(buffer, "%d", *cant_aux);
+  strcat(nombre_aux,buffer); 
+  insertar_tabla_simbolos(tabla_simbolos, nombre_aux, "FLOAT", "", 0, 0);
+  *cant_aux = *cant_aux +1;
+}
+
+char * buscar_tipo_simbolo(t_tabla *tabla_simbolos, const char *nombre) {
+    t_simbolo *actual = tabla_simbolos->primero;
+
+    while (actual != NULL) {
+        if (actual->data.nombre != NULL && strcmp(actual->data.nombre, nombre) == 0) {
+            return strdup(actual->data.tipo);
+        }
+        actual = actual->next;
+    }
+
+    return strdup("ERROR"); // No se encontró simbolo
 }
 
 #endif

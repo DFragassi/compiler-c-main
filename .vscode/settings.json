@@ -1,0 +1,12 @@
+{
+    "C_Cpp.errorSquiggles": "disabled",
+    "files.associations": {
+        "*.y": "c",
+        "typeinfo": "c",
+        "string.h": "c",
+        "stdio.h": "c",
+        "math.h": "c",
+        "cola.h": "c",
+        "polaca-inversa.h": "c"
+    }
+}
