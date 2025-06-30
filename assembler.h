@@ -134,8 +134,11 @@ void generar_assembler( t_cola *polaca,t_tabla *tabla_sim){
       }
       tabla = tabla->next;
     }
+    fprintf(file_assembler,  "_msgPRESIONE            db  0DH,0AH,\"Presione una tecla para continuar...\",'$'\n");
+    fprintf(file_assembler,  "_NEWLINE            db  0DH,0AH,'$'\n");
 
     fprintf(file_assembler,  "\n.CODE");
+    fprintf(file_assembler,  "\n.START:");
     fprintf(file_assembler,  "\nMOV EAX,@DATA");
     fprintf(file_assembler,  "\nMOV DS,EAX");
     fprintf(file_assembler,  "\nMOV ES,EAX;\n\n");
@@ -284,10 +287,18 @@ void generar_assembler( t_cola *polaca,t_tabla *tabla_sim){
         actual = actual->siguiente;
     }
 
+    fprintf(file_assembler, "\nmov dx,OFFSET _NEWLINE");
+    fprintf(file_assembler, "\nmov ah,9");
+    fprintf(file_assembler, "\nint 21h");
+    fprintf(file_assembler, "\nmov dx,OFFSET _msgPRESIONE");
+    fprintf(file_assembler, "\nmov ah,9");
+    fprintf(file_assembler, "\nint 21h");
+    fprintf(file_assembler, "\nmov ah, 1");
+    fprintf(file_assembler, "\nint 21h");
     fprintf(file_assembler, "\nFFREE");
     fprintf(file_assembler,  "\nmov ax,4c00h");
     fprintf(file_assembler,  "\nint 21h");
-    fprintf(file_assembler,  "\nEnd");
+    fprintf(file_assembler,  "\nEND START");
 
 }
 

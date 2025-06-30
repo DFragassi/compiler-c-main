@@ -57,6 +57,17 @@ void replace_all_char(char* cadena, char buscar, char reemplazo) {
     }
 }
 
+void remove_all_char(char* cadena, char eliminar) {
+    int i = 0, j = 0;
+    while (cadena[i]) {
+        if (cadena[i] != eliminar) {
+            cadena[j++] = cadena[i];
+        }
+        i++;
+    }
+    cadena[j] = '\0';  // Termina la nueva cadena
+}
+
 t_data *crearDatos(const char *nombre, const char *tipo,
                    const char *valString, int valor_var_int,
                    float valor_var_float)
@@ -91,6 +102,10 @@ t_data *crearDatos(const char *nombre, const char *tipo,
   {
     char nombreCte[100] = "_";
     strcat(nombreCte, nombre);
+
+    replace_all_char(nombreCte,'.','_');
+    replace_all_char(nombreCte,' ','_');
+    remove_all_char(nombreCte,'"');
 
     data->nombre = (char *)malloc(sizeof(char) * (strlen(nombreCte) + 1));
     if (data->nombre == NULL)
